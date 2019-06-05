@@ -1,18 +1,27 @@
-PROG_NAME := xprobe
-SOURCES := $(wildcard *.c)
-HEADERS := $(wildcard *.h)
-OBJS := ${SOURCES:.c=.o}
-CC := gcc
-CFLAGS += -Wall -std=c99 -w -Wextra -pedantic -D_BSD_SOURCE
-NOERR := 2>/dev/null
+CC = gcc
+SOURCE = main.c pkt_proc.c hash.c
+TARGET = xProbe
+LDFLAGS = -pthread -lbpf -lelf
 
-.PHONY: all clean
+.PHONY: xdp_sock clean run_help run free
 
-all: $(PROG_NAME)
+# -L/home/admin/xplote01/libbpf/src/root/usr/lib64/  
+#rewrite -I libbpf source directory if needed
+xdp_sock:
+	$(CC) $(SOURCE) -o $(TARGET)  -I/home/admin/xplote01/libbpf/include/  $(LDFLAGS)
 
-$(PROG_NAME): $(OBJS) $(HEADERS)
-	$(LINK.c) $(OBJS) -o $(PROG_NAME) -lpthread
+XDPfree:
+	ip link set dev tge3 xdp off
+
+
+
 
 clean:
-	$(RM) $(PROG_NAME)
-	$(RM) $(OBJS)
+	rm *.o $(TARGET)
+
+run_help:
+	./$(TARGET) --help
+
+run:
+	taskset -c 1 ./$(TARGET) -i fge11  -N -z
+	
